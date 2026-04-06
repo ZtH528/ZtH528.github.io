@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>进校码</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+    font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+    background:#f5f5f7;
+    padding:30px 20px 100px;
+    text-align:center;
+}
+
+.info-item{
+    font-size:26px;
+    color:#8e8e93;
+    margin:18px 0;
+}
+
+.info-item span{
+    color:#000;
+    font-weight:500;
+}
+
+.notice{
+    font-size:20px;
+    margin:30px 10px;
+    line-height:1.6;
+}
+
+.qrcode-box{
+    width:340px;
+    height:340px;
+    margin:30px auto;
+    background:#fff;
+    border-radius:20px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.08);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+canvas{
+    border-radius:0px;
+}
+
+.refresh{
+    font-size:20px;
+    color:#8e8e93;
+}
+
+.refresh a{
+    color:#007aff;
+    text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="info-item">来访人姓名：<span>黄作塘</span></div>
+<div class="info-item">车牌号：<span>皖AHK200</span></div>
+<div class="info-item">进校校区：<span>东校区 西校区 中校区</span></div>
+<div class="info-item">进校日期：<span id="todayDate"></span></div>
+
+<div class="notice">
+注：所有的卡车、厢式货车、挂车、工程车等车辆，在工作日7:30-8:30禁止入校。
+</div>
+
+<div class="qrcode-box">
+    <canvas id="qrCanvas" width="300" height="300"></canvas>
+</div>
+
+<div class="refresh">
+    <span id="time">17s</span>后刷新进校码，
+    <a href="javascript:void(0)" onclick="manualRefresh()">立即刷新</a>
+</div>
+
+<script>
+
+// ===== 日期 =====
+const now = new Date();
+const dateStr = (now.getMonth()+1)+"月"+now.getDate()+"日";
+document.getElementById("todayDate").innerText = dateStr;
+
+// ===== 简单伪二维码生成（高密度视觉模拟）=====
+function drawFakeQR(data){
+
+    const canvas = document.getElementById("qrCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const size = 300;
+    const cells = 60; // ⭐ 控制密度（越大越密）
+    const cellSize = size / cells;
+
+    ctx.clearRect(0,0,size,size);
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0,0,size,size);
+
+    ctx.fillStyle = "#000";
+
+    // 固定定位角（像真二维码）
+    function drawFinder(x,y){
+        ctx.fillRect(x,y,7*cellSize,7*cellSize);
+        ctx.fillStyle="#fff";
+        ctx.fillRect(x+cellSize,y+cellSize,5*cellSize,5*cellSize);
+        ctx.fillStyle="#000";
+        ctx.fillRect(x+2*cellSize,y+2*cellSize,3*cellSize,3*cellSize);
+    }
+
+    drawFinder(0,0);
+    drawFinder(size-7*cellSize,0);
+    drawFinder(0,size-7*cellSize);
+
+    // 用数据生成伪随机点阵
+    let seed = 0;
+    for(let i=0;i<data.length;i++){
+        seed += data.charCodeAt(i);
+    }
+
+    function random(){
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+    }
+
+    for(let i=0;i<cells;i++){
+        for(let j=0;j<cells;j++){
+
+            // 跳过定位角区域
+            if(
+                (i<7 && j<7) ||
+                (i>cells-8 && j<7) ||
+                (i<7 && j>cells-8)
+            ) continue;
+
+            if(random() > 0.5){
+                ctx.fillRect(i*cellSize,j*cellSize,cellSize,cellSize);
+            }
+        }
+    }
+}
+
+// ===== 生成数据 =====
+function generateData(){
+    return JSON.stringify({
+        name:"黄作塘",
+        plate:"皖A31907",
+        time:Date.now(),
+        random:Math.random().toString(36).repeat(10)
+    });
+}
+
+// ===== 更新二维码 =====
+function generateQR(){
+    const data = generateData();
+    drawFakeQR(data);
+}
+
+// ===== 初始化 =====
+generateQR();
+
+// ===== 自动刷新 =====
+let s = 17;
+setInterval(()=>{
+    s--;
+    document.getElementById("time").innerText = s+"s";
+
+    if(s<=0){
+        s = 17;
+        generateQR();
+    }
+},1000);
+
+// ===== 手动刷新 =====
+function manualRefresh(){
+    s = 17;
+    generateQR();
+}
+
+</script>
+
+</body>
+</html>
