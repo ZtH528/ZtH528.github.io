@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>进校码</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    background:#f5f5f7;
+    padding:30px 20px 100px;
+    text-align:center;
+}
+.info-item{
+    font-size:26px;
+    color:#8e8e93;
+    margin:18px 0;
+}
+.info-item span{
+    color:#000;
+    font-weight:500;
+}
+.notice{
+    font-size:20px;
+    margin:30px 10px;
+    line-height:1.6;
+}
+.qrcode-box{
+    width:320px;
+    height:320px;
+    margin:30px auto;
+    background:#fff;
+    padding:15px;
+    border-radius:16px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#qrcode{
+    width: 290px;
+    height: 290px;
+}
+.refresh{
+    font-size:20px;
+    color:#8e8e93;
+}
+.refresh a{
+    color:#007aff;
+    text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+<div class="info-item">来访人姓名：<span>黄作塘</span></div>
+<div class="info-item">车牌号：<span>皖AHK200</span></div>
+<div class="info-item">进校校区：<span>东校区 西校区 中校区</span></div>
+<div class="info-item">进校日期：<span id="todayDate"></span></div>
+
+<div class="notice">
+注：所有的卡车、厢式货车、挂车、工程车等车辆，在工作日7:30-8:30禁止入校。
+</div>
+
+<div class="qrcode-box">
+    <img id="qrcode" alt="二维码">
+</div>
+
+<div class="refresh">
+    <span id="time">17s</span>后刷新进校码，<a href="javascript:location.reload()">立即刷新</a>
+</div>
+
+<script>
+// 1. 当天日期
+const now = new Date();
+const dateStr = (now.getMonth() + 1) + "月" + now.getDate() + "日";
+document.getElementById("todayDate").innerText = dateStr;
+
+// 2. 生成【超复杂高密度二维码】（每次都更新）
+const complexData = `USTC-CAMPUS-${dateStr}-${Date.now()}-${Math.random()}-VISITOR-A31907-HUANGZUOTANG-SECURE-QR-2026-VALID`;
+const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=1290x1290&data=" + encodeURIComponent(complexData);
+document.getElementById("qrcode").src = qrUrl;
+
+// 3. 17秒倒计时
+let s = 17;
+const timer = setInterval(() => {
+    s--;
+    document.getElementById("time").innerText = s + "s";
+    if (s <= 0) {
+        clearInterval(timer);
+        location.reload();
+    }
+}, 1000);
+</script>
+</body>
+</html>
